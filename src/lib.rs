@@ -100,19 +100,40 @@ impl Tokenizer<'_> {
     }
 
     pub fn next_token(&mut self) -> Option<Token> {
-        match self.to_parse.next()? {
-            '{' => Some(Token::CurlyBracketOpen),
-            '}' => Some(Token::CurlyBracketClose),
-            '[' => Some(Token::BracketOpen),
-            ']' => Some(Token::BracketClose),
-            ',' => Some(Token::Comma),
-            ':' => Some(Token::Colon),
-            '"' => self.next_string(),
-            c if c.is_whitespace() => self.next_token(),
-            c if c == 't' => self.next_true(),
-            c if c == 'f' => self.next_false(),
-            c if c == 'n' => self.next_null(),
-            c @ '0'..='9' => self.next_number(c),
+        match self.to_parse.peek()? {
+            &'{' => {
+                self.to_parse.next();
+                Some(Token::CurlyBracketOpen)
+            },
+            &'}' => {
+                self.to_parse.next();
+                Some(Token::CurlyBracketClose)
+            },
+            &'[' => {
+                self.to_parse.next();
+                Some(Token::BracketOpen)
+            },
+            &']' => {
+                self.to_parse.next();
+                Some(Token::BracketClose)
+            },
+            &',' => {
+                self.to_parse.next();
+                Some(Token::Comma)
+            },
+            &':' => {
+                self.to_parse.next();
+                Some(Token::Colon)
+            },
+            &'"' => self.next_string(),
+            c if c.is_whitespace() => {
+                self.to_parse.next();
+                self.next_token()
+            },
+            c if *c == 't' => self.next_true(),
+            c if *c == 'f' => self.next_false(),
+            c if *c == 'n' => self.next_null(),
+            '0'..='9' => self.next_number(),
             c => {
                 println!("Couldn't parse: {}", c);
                 None
@@ -120,8 +141,8 @@ impl Tokenizer<'_> {
         }
     }
 
-    fn next_number(&mut self, prev: char) -> Option<Token> {
-        let mut found_number = String::from(prev);
+    fn next_number(&mut self) -> Option<Token> {
+        let mut found_number = String::new();
 
         while let Some(c) = self.to_parse.peek() {
             if !('0'..='9').contains(c) && *c != '.' {
@@ -141,7 +162,7 @@ impl Tokenizer<'_> {
 
     fn next_true(&mut self) -> Option<Token> {
         // we know prev char is t
-        for _ in 0..3 {
+        for _ in 0..4 {
             self.to_parse.next();
         }
 
@@ -150,7 +171,7 @@ impl Tokenizer<'_> {
 
     fn next_false(&mut self) -> Option<Token> {
         // we know prev char is f
-        for _ in 0..4 {
+        for _ in 0..5 {
             self.to_parse.next();
         }
 
@@ -159,7 +180,7 @@ impl Tokenizer<'_> {
 
     fn next_null(&mut self) -> Option<Token> {
         // we know prev char is n
-        for _ in 0..3 {
+        for _ in 0..4 {
             self.to_parse.next();
         }
 
@@ -167,14 +188,24 @@ impl Tokenizer<'_> {
     }
 
     fn next_string(&mut self) -> Option<Token> {
-        // we know prev char is "
-        let mut found_str: String = String::new();
+        // consume "
+        self.to_parse.next().unwrap();
 
+        let mut found_str: String = String::new();
+        let mut is_escaped = false;
         while let Some(c) = self.to_parse.next() {
-            if c == '"' {
-                break;
+            if is_escaped {
+                found_str.push(c);
+                is_escaped = false
+            } else {
+                if c == '\\' {
+                    is_escaped = true;
+                    continue;
+                } else if c == '"' {
+                    break;
+                }
+                found_str.push(c);
             }
-            found_str.push(c);
         }
 
         // println!("found_str: {:?}", found_str);
