@@ -366,7 +366,7 @@ impl Parser<'_> {
         }
 
         while let Some(val) = self.parse_value() {
-            vec.push(val.clone());
+            vec.push(val);
 
             // Consuming , or ]
             if let Some(tok) = self.t.next() {
