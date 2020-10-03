@@ -79,7 +79,7 @@ impl Debug for Value {
 
 #[derive(Debug)]
 pub enum Token {
-    Value(Value),
+    Value(Value), // Only primitive variants of Value are used in Token
     CurlyBracketOpen,
     CurlyBracketClose,
     BracketOpen,
@@ -239,7 +239,7 @@ impl Tokenizer<'_> {
 
     fn next_string(&mut self) -> Option<Token> {
         // consume "
-        self.to_parse.next().unwrap();
+        self.to_parse.next();
 
         let mut found_str: String = String::new();
         let mut is_escaped = false;
@@ -257,8 +257,6 @@ impl Tokenizer<'_> {
                 found_str.push(c);
             }
         }
-
-        // println!("found_str: {:?}", found_str);
 
         Some(Token::Value(JsonString(found_str)))
     }
