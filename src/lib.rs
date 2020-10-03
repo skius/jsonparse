@@ -162,8 +162,25 @@ impl Tokenizer<'_> {
 
     fn next_true(&mut self) -> Option<Token> {
         // we know prev char is t
-        for _ in 0..4 {
-            self.to_parse.next();
+
+        let mut failed = false;
+
+        "true".chars().for_each(|c| {
+            if let Some(parsed_c) = self.to_parse.next() {
+                if c != parsed_c {
+                    println!("Couldn't parse true");
+                    failed = true;
+                    return;
+                }
+            } else {
+                println!("Unexpected EOF");
+                failed = true;
+                return;
+            }
+        });
+
+        if failed {
+            return None;
         }
 
         Some(Token::Value(Bool(true)))
@@ -171,17 +188,50 @@ impl Tokenizer<'_> {
 
     fn next_false(&mut self) -> Option<Token> {
         // we know prev char is f
-        for _ in 0..5 {
-            self.to_parse.next();
-        }
 
+        let mut failed = false;
+
+        "false".chars().for_each(|c| {
+            if let Some(parsed_c) = self.to_parse.next() {
+                if c != parsed_c {
+                    println!("Couldn't parse true");
+                    failed = true;
+                    return;
+                }
+            } else {
+                println!("Unexpected EOF");
+                failed = true;
+                return;
+            }
+        });
+
+        if failed {
+            return None;
+        }
         Some(Token::Value(Bool(false)))
     }
 
     fn next_null(&mut self) -> Option<Token> {
         // we know prev char is n
-        for _ in 0..4 {
-            self.to_parse.next();
+
+        let mut failed = false;
+
+        "null".chars().for_each(|c| {
+            if let Some(parsed_c) = self.to_parse.next() {
+                if c != parsed_c {
+                    println!("Couldn't parse true");
+                    failed = true;
+                    return;
+                }
+            } else {
+                println!("Unexpected EOF");
+                failed = true;
+                return;
+            }
+        });
+
+        if failed {
+            return None;
         }
 
         Some(Token::Value(Null))
